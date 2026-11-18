@@ -1,0 +1,64 @@
+Linux bench-plain 6.18.63 #1-NixOS SMP PREEMPT_DYNAMIC Tue Nov 10 18:07:06 UTC 2026 x86_64 GNU/Linux
+initrd=\EFI\nixos\azq53a7a8b8j08mjdyx03yp4lr8wvw7v-initrd-linux-6.18.63-initrd.efi init=/nix/store/dhy5mrzzsjv344d0ajfyg3ab5wc091g4-nixos-system-bench-plain-26.05.20261116.f684076/init console=ttyS0 console=tty0 panic=1 boot.panic_on_fail clocksource=acpi_pm systemd.show_status=1 root=fstab loglevel=7 net.ifnames=0 lsm=landlock,yama,bpf
+
+Architecture:                            x86_64
+CPU op-mode(s):                          32-bit, 64-bit
+Address sizes:                           40 bits physical, 48 bits virtual
+Byte Order:                              Little Endian
+CPU(s):                                  4
+On-line CPU(s) list:                     0-3
+Vendor ID:                               GenuineIntel
+Model name:                              Intel Core Processor (Skylake, IBRS, no TSX)
+CPU family:                              6
+Model:                                   94
+Thread(s) per core:                      1
+Core(s) per socket:                      4
+Socket(s):                               1
+Stepping:                                3
+Microcode version:                       0x1
+BogoMIPS:                                5990.40
+Flags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx rdtscp lm rep_good nopl xtopology cpuid tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch cpuid_fault pti ibrs ibpb fsgsbase bmi1 avx2 smep bmi2 erms invpcid rdseed adx smap xsaveopt xsavec xgetbv1 xsaves arat
+Hypervisor vendor:                       KVM
+Virtualization type:                     full
+L1d cache:                               128 KiB (4 instances)
+L1i cache:                               128 KiB (4 instances)
+L2 cache:                                16 MiB (4 instances)
+L3 cache:                                16 MiB (1 instance)
+NUMA node(s):                            1
+NUMA node0 CPU(s):                       0-3
+Vulnerability Gather data sampling:      Unknown: Dependent on hypervisor status
+Vulnerability Ghostwrite:                Not affected
+Vulnerability Indirect target selection: Mitigation; Aligned branch/return thunks
+Vulnerability Itlb multihit:             KVM: Mitigation: VMX unsupported
+Vulnerability L1tf:                      Mitigation; PTE Inversion
+Vulnerability Mds:                       Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown
+Vulnerability Meltdown:                  Mitigation; PTI
+Vulnerability Mmio stale data:           Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown
+Vulnerability Old microcode:             Not affected
+Vulnerability Reg file data sampling:    Not affected
+Vulnerability Retbleed:                  Mitigation; IBRS
+Vulnerability Spec rstack overflow:      Not affected
+Vulnerability Spec store bypass:         Vulnerable
+Vulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+Vulnerability Spectre v2:                Mitigation; IBRS; IBPB conditional; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI SW loop, KVM SW loop
+Vulnerability Srbds:                     Unknown: Dependent on hypervisor status
+Vulnerability Tsa:                       Not affected
+Vulnerability Tsx async abort:           Not affected
+Vulnerability Vmscape:                   Not affected
+
+               total        used        free      shared  buff/cache   available
+Mem:            5922         676        4592          34         907        5246
+Swap:              0           0           0
+
+42 62 0:31 /nix/store /nix/store ro,nosuid,nodev,relatime shared:15 - btrfs /dev/vda2 rw,discard=async,space_cache=v2,subvolid=5,subvol=/
+
+TARGET SOURCE    FSTYPE OPTIONS
+/      /dev/vda2 btrfs  rw,relatime,discard=async,space_cache=v2,subvolid=5,subvol=/
+NAME    SIZE MODEL        TRAN   FSTYPE LABEL
+fd0       4K                            
+sr0    1024M QEMU DVD-ROM ata           
+vda      40G              virtio        
+├─vda1    1G              virtio vfat   ESP
+└─vda2   39G              virtio btrfs  nixos
+sha256-lib
+sha512-lib

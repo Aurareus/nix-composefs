@@ -1,0 +1,37 @@
+{
+  "entries": {
+    "removed_unsealed": [],
+    "removed_without_nixcfs": [],
+    "updated": [
+      "nixos-generation-1.conf",
+      "nixos-generation-2.conf"
+    ]
+  },
+  "gc": {
+    "bytes_freed": 0,
+    "dropped_refs": [],
+    "images_removed": 0,
+    "kept_images": [
+      "08a05bdce423988bca98794a13d54f8620098ca7cb22c7e5342ed22978d38499c89bd2bd8b5fa6ae364a3b076ad17016ca37de3982abbe20ed7092c1d6494843",
+      "0bc910b916fb30479fe2bf9a91fbda575fe95595f259ffd4346835cfe0c64c46cabd0efbeae3fbefb2bedeb6e07ae0bba0feff93a28ef9178e5b9e36e777b2be"
+    ],
+    "objects_removed": 0
+  },
+  "seal": {
+    "image": "08a05bdce423988bca98794a13d54f8620098ca7cb22c7e5342ed22978d38499c89bd2bd8b5fa6ae364a3b076ad17016ca37de3982abbe20ed7092c1d6494843",
+    "import": {
+      "already_present": 3340,
+      "bytes": 2504112980,
+      "copied": 0,
+      "hardlinked": 0,
+      "reflinked": 20076
+    },
+    "missing_paths": [],
+    "previous": "0bc910b916fb30479fe2bf9a91fbda575fe95595f259ffd4346835cfe0c64c46cabd0efbeae3fbefb2bedeb6e07ae0bba0feff93a28ef9178e5b9e36e777b2be",
+    "reused_paths": 1548,
+    "reverted_paths": [],
+    "scanned_paths": 135,
+    "seconds": 15.121778883,
+    "valid_paths": 1683
+  }
+}

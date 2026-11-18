@@ -1,0 +1,13 @@
+{
+  "booted_image": "0bc910b916fb30479fe2bf9a91fbda575fe95595f259ffd4346835cfe0c64c46cabd0efbeae3fbefb2bedeb6e07ae0bba0feff93a28ef9178e5b9e36e777b2be",
+  "latest_image": "0bc910b916fb30479fe2bf9a91fbda575fe95595f259ffd4346835cfe0c64c46cabd0efbeae3fbefb2bedeb6e07ae0bba0feff93a28ef9178e5b9e36e777b2be",
+  "shadowing_sealed_paths": [],
+  "store_is_overlay": true,
+  "unsealed_upper_entries": 1
+}
+find: ‘standard output’: Broken pipe
+find: write error
+victim /nix/store/f41qarmcx7bdva55fg3b4mlwk93w12s4-perl-5.42.3/bin/zipdetails -> /nix/.cfs/objects/b1/d9d36145ac004360478baffdba78044a4c7a65713e281f96807a80ad0cc37d6ae7542b53ca0add3e95f4bad79fed6baff3ac5b4f778ca5af5494f3ab742c7d
+tamper test ok: modified object refused
+[  227.951858] overlayfs: lower file 'd9d36145ac004360478baffdba78044a4c7a65713e281f96807a80ad0cc37d6ae7542b53ca0add3e95f4bad79fed6baff3ac5b4f778ca5af5494f3ab742c7d' has the wrong fs-verity digest
+cat: /nix/store/f41qarmcx7bdva55fg3b4mlwk93w12s4-perl-5.42.3/bin/zipdetails: Input/output error

@@ -1,2 +1,8 @@
 sha256: enable 5.614803589 s; verified cold read 818 MiB/s; unverified cold read 2718 MiB/s
 sha512: enable 10.473418692 s; verified cold read 291 MiB/s; unverified cold read 2362 MiB/s
+
+# warm read of all files of the lab closure (78515 files, 1.2 GB), 5-run mean, host i7-1185G7, btrfs loop:
+plain directory (same files, reflinked):        0.545 s
+composefs overlay, verity=require, with upper:  0.662 s
+composefs overlay, no verity, no upper:         0.651 s
+=> the warm-path cost is overlayfs per-open overhead (backing-file open), not fs-verity.

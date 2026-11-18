@@ -1,0 +1,45 @@
+Filesystem       1B-blocks        Used   Available Use% Mounted on
+/dev/vda2      41874862080 10688688128 29466759168  27% /
+
+Overall:
+    Device size:		       41874862080
+    Device allocated:		       13983809536
+    Device unallocated:		       27891052544
+    Device missing:		                 0
+    Device slack:		              3584
+    Used:			       10658607104
+    Free (estimated):		       29467852800	(min: 15522326528)
+    Free (statfs, df):		       29466759168
+    Data ratio:			              1.00
+    Metadata ratio:		              2.00
+    Global reserve:		          30081024	(used: 0)
+    Multiple profiles:		                no
+
+Data,single: Size:10745806848, Used:9169006592 (85.33%)
+   /dev/vda2	10745806848
+
+Metadata,DUP: Size:1610612736, Used:744783872 (46.24%)
+   /dev/vda2	3221225472
+
+System,DUP: Size:8388608, Used:16384 (0.20%)
+   /dev/vda2	  16777216
+
+Unallocated:
+   /dev/vda2	27891052544
+
+== du (apparent, MiB)
+0 /nix/store
+8610 /nix/.cfs/objects
+1 /nix/.cfs/images
+0 /nix/.cfs-rw/upper
+== du (allocated, MiB, -x)
+9113	/nix/.cfs
+1	/nix/.cfs-rw
+store paths: 1548
+objects: 206537
+total 4
+drwxr-xr-x 1 root root 136 Nov 18 05:14 .
+drwx------ 1 root root  44 Nov 18 05:14 ..
+lrwxrwxrwx 1 root root  76 Nov 18 05:14 3256c412402e2188b2406ba43f48dfba8e5977b4d5e2d462ea0aadc1cc5e6090 -> ../objects/32/56c412402e2188b2406ba43f48dfba8e5977b4d5e2d462ea0aadc1cc5e6090
+drwxr-xr-x 1 root root  10 Nov 18 05:14 refs
+85557248 /nix/.cfs/images/3256c412402e2188b2406ba43f48dfba8e5977b4d5e2d462ea0aadc1cc5e6090

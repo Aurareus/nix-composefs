@@ -1,0 +1,34 @@
+Filesystem       1B-blocks        Used   Available Use% Mounted on
+/dev/vda2      41874862080 10015805440 31560151040  25% /
+
+Overall:
+    Device size:		       41874862080
+    Device allocated:		       11836325888
+    Device unallocated:		       30038536192
+    Device missing:		                 0
+    Device slack:		              3584
+    Used:			        9992949760
+    Free (estimated):		       31561244672	(min: 16541976576)
+    Free (statfs, df):		       31560151040
+    Data ratio:			              1.00
+    Metadata ratio:		              2.00
+    Global reserve:		          22855680	(used: 0)
+    Multiple profiles:		                no
+
+Data,single: Size:10745806848, Used:9223098368 (85.83%)
+   /dev/vda2	10745806848
+
+Metadata,DUP: Size:536870912, Used:384909312 (71.69%)
+   /dev/vda2	1073741824
+
+System,DUP: Size:8388608, Used:16384 (0.20%)
+   /dev/vda2	  16777216
+
+Unallocated:
+   /dev/vda2	30038536192
+
+== du (apparent, MiB)
+8657 /nix/store
+== du (allocated, MiB, -x)
+9587	/nix/store
+store paths: 1544

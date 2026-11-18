@@ -1,0 +1,17 @@
+[    1.835086] bench-cfs systemd[1]: Starting Mount the composefs Nix store (fs-verity enforced)...
+[    1.852224] bench-cfs nixcfs[182]: [2026-11-18T05:15:49Z INFO  nixcfs::boot] image 3256c412402e2188b2406ba43f48dfba8e5977b4d5e2d462ea0aadc1cc5e6090 has 1548 store paths
+[    1.865743] bench-cfs nixcfs[182]: [2026-11-18T05:15:49Z INFO  nixcfs::boot] mounted 3256c412402e2188b2406ba43f48dfba8e5977b4d5e2d462ea0aadc1cc5e6090 on /sysroot/nix/store
+[    1.866820] bench-cfs nixcfs[182]: {
+[    1.866820] bench-cfs nixcfs[182]:   "image": "3256c412402e2188b2406ba43f48dfba8e5977b4d5e2d462ea0aadc1cc5e6090",
+[    1.866820] bench-cfs nixcfs[182]:   "scrub": {
+[    1.866820] bench-cfs nixcfs[182]:     "removed_shadowing": [],
+[    1.866820] bench-cfs nixcfs[182]:     "kept_whiteouts": 0,
+[    1.866820] bench-cfs nixcfs[182]:     "removed_stale_whiteouts": 0,
+[    1.866820] bench-cfs nixcfs[182]:     "kept_unsealed": 1,
+[    1.866820] bench-cfs nixcfs[182]:     "root_xattrs_removed": [],
+[    1.866820] bench-cfs nixcfs[182]:     "legacy_moved_to_upper": 0,
+[    1.866820] bench-cfs nixcfs[182]:     "legacy_trashed": false
+[    1.866820] bench-cfs nixcfs[182]:   },
+[    1.866820] bench-cfs nixcfs[182]:   "seconds": 0.018474136
+[    1.866820] bench-cfs nixcfs[182]: }
+[    1.906949] bench-cfs systemd[1]: Finished Mount the composefs Nix store (fs-verity enforced).

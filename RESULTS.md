@@ -1,6 +1,6 @@
 # Results: NixOS with a composefs-backed /nix/store
 
-Status: DRAFT (measurements and hardware results pending)
+Status: DRAFT (real-hardware results pending)
 
 ## 1. Summary
 
@@ -206,7 +206,111 @@ boot; a test-driver bug (nixpkgs patch 1).
 
 ## 6. Measurements
 
-TODO
+### Method
+
+* System: the Plasma 6 desktop (`nixos/configs/hw-plasma.nix`, 1548 store
+  paths, 9.2 GB, 230k files), built twice: **composefs store** and **ordinary
+  store**, otherwise identical, both btrfs. Also composefs with **sha512**
+  digests.
+* KVM on the host (i7-1185G7, NVMe), 4 vCPUs, 6 GiB, virtio disk with **host
+  caching off** (`cache=none`, O_DIRECT), so "cold" means read from the NVMe.
+  Each variant ran twice: with the host CPU (has SHA-NI) and with QEMU's
+  `Skylake-Client-v4` model (no SHA-NI, like the Surface Pro 4's i5/i7-6x00U),
+  so hashing costs approximate that machine. Disk speed is still the host's NVMe.
+* Measured on the second boot (the first boot does one-time work), with
+  `bench/nixcfs-bench.sh`; median of 3 for each timing. Raw reports:
+  `bench/results/vm-2026-11-18/`, summary `SUMMARY.md` there; rerun with
+  `nix build .#benchmarks.x86_64-linux.desktop`.
+* Real hardware: pending (section 6.5).
+
+### 6.1 Boot time (systemd-analyze, seconds)
+
+| | composefs | ordinary | Δ | composefs (Skylake) | ordinary (Skylake) | Δ |
+|---|---|---|---|---|---|---|
+| kernel | 0.36 | 0.36 | 0 | 0.36 | 0.37 | 0 |
+| initrd | 2.04 | 1.99 | +0.05 | 2.18 | 2.06 | +0.12 |
+| userspace → graphical.target | 2.71 | 1.99 | +0.72 | 2.81 | 2.07 | +0.75 |
+| **total** | **5.12** | **4.34** | **+0.78 (+18%)** | **5.36** | **4.49** | **+0.87 (+19%)** |
+
+The initrd step itself (verify image, scrub, mount) takes about 20 ms (`boot-report.json`).
+The remaining ~0.75 s is spread over userspace: every file opened for the first
+time pays for the overlay lookup plus verification of the blocks read. On a
+cold USB stick or a slower SSD, the data-read share of this grows.
+
+### 6.2 File access (seconds; lower is better)
+
+| | composefs | ordinary | ratio | composefs Skylake | ordinary Skylake | ratio |
+|---|---|---|---|---|---|---|
+| read every closure file, cold (9.2 GB) | 12.7 | 8.9 | 1.43 | 18.0 | 9.4 | 1.92 |
+| same, warm (page cache) | 7.9 | 5.5 | 1.43 | 12.3 | 6.4 | 1.93 |
+| walk the closure (find, stat), cold | 2.5 | 3.8 | **0.65** | 3.7 | 4.8 | **0.77** |
+| walk, warm | 1.33 | 1.39 | 0.96 | 2.46 | 2.52 | 0.98 |
+| `perl -e1`, cold | 0.053 | 0.042 | 1.26 | 0.064 | 0.043 | 1.49 |
+| `konsole --version`, cold | 0.33 | 0.32 | 1.04 | 0.40 | 0.31 | 1.30 |
+| `kate --version`, cold | 0.30 | 0.40 | 0.75 | 0.35 | 0.37 | 0.96 |
+| Firefox headless start, cold | 0.87 | 0.77 | 1.14 | 1.11 | 0.85 | 1.31 |
+| any of the apps, warm | ±2% | | ~1.0 | ±3% | | ~1.0 |
+| `nix-store --verify --check-contents` | 39.0 | 30.2 | 1.29 | 59.7 | 45.6 | 1.31 |
+
+Reading:
+
+* **Desktop use**: warm application starts are unchanged; cold starts cost
+  0–30% (worst on the SHA-less CPU). Metadata-heavy work (directory walks) is
+  *faster* cold, because EROFS metadata is compact.
+* **Bulk reading of the store** is where it costs: +43% cold on a SHA-NI CPU,
+  nearly 2x on Skylake. Two separate costs are involved. (a) Hashing on
+  cold reads: on the host, a 2 GiB file reads cold at 2.7 GB/s unverified vs
+  0.82 GB/s with sha256 verity (`logs/verity-hash-microbench-host.txt`).
+  (b) A per-`open()` overlayfs cost that also shows up warm. On the host, warm
+  reads of 78k files take 0.54 s plain, 0.66 s through the overlay *with or
+  without* verity, so (b) is overlayfs's backing-file open, not fs-verity. The
+  VM numbers inflate (b), so the warm ratios above are a pessimistic bound.
+
+### 6.3 Disk use (btrfs, after cleanup, same system)
+
+| | composefs | ordinary |
+|---|---|---|
+| file data (btrfs `Data` used) | 9.17 GB | 9.22 GB |
+| btrfs metadata (`Metadata` used, ×2 for DUP) | 0.74 GB (×2) | 0.38 GB (×2) |
+| **total used** | **10.66 GB** | **9.99 GB (+6.7% for composefs)** |
+| EROFS image (one) | 86 MB | — |
+| distinct file objects | 206,537 (for ~230k files) | — |
+
+Content deduplication saves a little data (the ordinary store is not
+`nix-store --optimise`d, so this is the dedup composefs gives for free). The
+extra cost is **btrfs metadata**: btrfs stores each file's fs-verity Merkle
+tree as metadata items, and metadata is duplicated (DUP) by default. On ext4
+the Merkle tree sits after the file data instead (~0.8% of data for sha256).
+After a rebuild, each additional sealed generation adds another image of
+about 86 MB until GC drops it; old images are dropped once no boot entry uses them.
+
+### 6.4 Rebuild cost
+
+Update that adds 135 store paths / 2.5 GB (LibreOffice, GIMP, Inkscape) to the
+desktop, then a rebuild with no changes. Times in seconds; fetching the paths
+(identical for both, from a local cache) is excluded.
+
+| | composefs | ordinary | composefs Skylake | ordinary Skylake |
+|---|---|---|---|---|
+| `switch-to-configuration boot` (bootloader install; for composefs including seal) | 15.9 | 0.27 | 20.0 | 0.27 |
+| of which sealing | 14.1 | — | 18.1 | — |
+| no-op rebuild (nothing new) | 3.5 | 0.09 | 4.0 | 0.11 |
+
+Sealing runs at about 140–180 MB/s of new content. That covers reflinking
+into the object store, the fs-verity Merkle tree build, and reading
+everything back for the NAR-hash check. On top comes a fixed ~3.5 s to load
+the previous image (86 MB), write the new one, stamp entries and run GC. For
+comparison, downloading those 2.5 GB took 20 s from a *local* cache. The
+initial seal of the whole 9.2 GB desktop took 39 s in a 4-vCPU build VM.
+
+sha512 instead of sha256: slower on the SHA-NI CPU (cold read 16.1 vs 12.7 s),
+roughly equal on Skylake (16.9 vs 18.0 s cold; sealing 17.8 vs 18.1 s), and
+the image is 23% bigger. **Default stays sha256** (`nixcfs.algorithm`
+can select sha512, fixed per installation).
+
+### 6.5 Real hardware (Surface Pro 4)
+
+Pending: see HARDWARE-TEST.md.
 
 ## 7. Patches for upstream
 

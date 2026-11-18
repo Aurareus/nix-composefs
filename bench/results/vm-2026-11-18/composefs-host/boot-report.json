@@ -1,0 +1,13 @@
+{
+  "image": "3256c412402e2188b2406ba43f48dfba8e5977b4d5e2d462ea0aadc1cc5e6090",
+  "scrub": {
+    "removed_shadowing": [],
+    "kept_whiteouts": 0,
+    "removed_stale_whiteouts": 0,
+    "kept_unsealed": 1,
+    "root_xattrs_removed": [],
+    "legacy_moved_to_upper": 0,
+    "legacy_trashed": false
+  },
+  "seconds": 0.018474136
+}

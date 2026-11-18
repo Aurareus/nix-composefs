@@ -1,0 +1,43 @@
+nixcfs-bench variant=composefs host=bench-cfs512 at 20261118T052356Z
+Startup finished in 361ms (kernel) + 2.092s (initrd) + 3.217s (userspace) = 5.672s 
+graphical.target reached after 3.217s in userspace.
+closure: 1548 paths, 9169044536 bytes
+read_closure_cold_1 15.797 rc=0
+read_closure_cold_2 16.977 rc=0
+read_closure_cold_3 16.135 rc=0
+read_closure_warm_1 10.332 rc=0
+read_closure_warm_2 10.483 rc=0
+read_closure_warm_3 10.492 rc=0
+walk_closure_cold_1 2.579 rc=0
+walk_closure_cold_2 2.588 rc=0
+walk_closure_cold_3 2.593 rc=0
+walk_closure_warm_1 1.326 rc=0
+walk_closure_warm_2 1.317 rc=0
+walk_closure_warm_3 1.337 rc=0
+app_perl_cold_1 0.063 rc=0
+app_perl_cold_2 0.068 rc=0
+app_perl_cold_3 0.061 rc=0
+app_perl_warm_1 0.012 rc=0
+app_perl_warm_2 0.012 rc=0
+app_perl_warm_3 0.012 rc=0
+app_konsole_cold_1 0.353 rc=0
+app_konsole_cold_2 0.348 rc=0
+app_konsole_cold_3 0.350 rc=0
+app_konsole_warm_1 0.069 rc=0
+app_konsole_warm_2 0.069 rc=0
+app_konsole_warm_3 0.071 rc=0
+app_kate_cold_1 0.343 rc=0
+app_kate_cold_2 0.373 rc=0
+app_kate_cold_3 0.369 rc=0
+app_kate_warm_1 0.064 rc=0
+app_kate_warm_2 0.063 rc=0
+app_kate_warm_3 0.063 rc=0
+app_firefox_cold_1 1.344 rc=0
+app_firefox_cold_2 0.983 rc=0
+app_firefox_cold_3 1.030 rc=0
+app_firefox_warm_1 0.440 rc=0
+app_firefox_warm_2 0.466 rc=0
+app_firefox_warm_3 0.450 rc=0
+verify_check_contents 47.960 rc=0
+tamper test ok: modified object refused
+report written to /root/report

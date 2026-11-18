@@ -1,0 +1,17 @@
+[    1.874880] bench-cfs512 systemd[1]: Starting Mount the composefs Nix store (fs-verity enforced)...
+[    1.890905] bench-cfs512 nixcfs[179]: [2026-11-18T05:33:45Z INFO  nixcfs::boot] image 0bc910b916fb30479fe2bf9a91fbda575fe95595f259ffd4346835cfe0c64c46cabd0efbeae3fbefb2bedeb6e07ae0bba0feff93a28ef9178e5b9e36e777b2be has 1548 store paths
+[    1.901577] bench-cfs512 nixcfs[179]: [2026-11-18T05:33:45Z INFO  nixcfs::boot] mounted 0bc910b916fb30479fe2bf9a91fbda575fe95595f259ffd4346835cfe0c64c46cabd0efbeae3fbefb2bedeb6e07ae0bba0feff93a28ef9178e5b9e36e777b2be on /sysroot/nix/store
+[    1.901577] bench-cfs512 nixcfs[179]: {
+[    1.901577] bench-cfs512 nixcfs[179]:   "image": "0bc910b916fb30479fe2bf9a91fbda575fe95595f259ffd4346835cfe0c64c46cabd0efbeae3fbefb2bedeb6e07ae0bba0feff93a28ef9178e5b9e36e777b2be",
+[    1.901577] bench-cfs512 nixcfs[179]:   "scrub": {
+[    1.901577] bench-cfs512 nixcfs[179]:     "removed_shadowing": [],
+[    1.901577] bench-cfs512 nixcfs[179]:     "kept_whiteouts": 0,
+[    1.901577] bench-cfs512 nixcfs[179]:     "removed_stale_whiteouts": 0,
+[    1.901577] bench-cfs512 nixcfs[179]:     "kept_unsealed": 1,
+[    1.901577] bench-cfs512 nixcfs[179]:     "root_xattrs_removed": [],
+[    1.901577] bench-cfs512 nixcfs[179]:     "legacy_moved_to_upper": 0,
+[    1.901577] bench-cfs512 nixcfs[179]:     "legacy_trashed": false
+[    1.901577] bench-cfs512 nixcfs[179]:   },
+[    1.901577] bench-cfs512 nixcfs[179]:   "seconds": 0.016834542
+[    1.901577] bench-cfs512 nixcfs[179]: }
+[    1.976344] bench-cfs512 systemd[1]: Finished Mount the composefs Nix store (fs-verity enforced).

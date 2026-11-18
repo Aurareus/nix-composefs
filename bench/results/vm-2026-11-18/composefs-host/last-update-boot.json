@@ -1,0 +1,37 @@
+{
+  "entries": {
+    "removed_unsealed": [],
+    "removed_without_nixcfs": [],
+    "updated": [
+      "nixos-generation-1.conf",
+      "nixos-generation-2.conf"
+    ]
+  },
+  "gc": {
+    "bytes_freed": 0,
+    "dropped_refs": [],
+    "images_removed": 0,
+    "kept_images": [
+      "3256c412402e2188b2406ba43f48dfba8e5977b4d5e2d462ea0aadc1cc5e6090",
+      "aa75eba438122a0f996659e37345664a4c226f8ff9bf2e1ccc118f8afbdada8c"
+    ],
+    "objects_removed": 0
+  },
+  "seal": {
+    "image": "aa75eba438122a0f996659e37345664a4c226f8ff9bf2e1ccc118f8afbdada8c",
+    "import": {
+      "already_present": 3340,
+      "bytes": 2504112956,
+      "copied": 0,
+      "hardlinked": 0,
+      "reflinked": 20076
+    },
+    "missing_paths": [],
+    "previous": "3256c412402e2188b2406ba43f48dfba8e5977b4d5e2d462ea0aadc1cc5e6090",
+    "reused_paths": 1548,
+    "reverted_paths": [],
+    "scanned_paths": 135,
+    "seconds": 14.123571569,
+    "valid_paths": 1683
+  }
+}
