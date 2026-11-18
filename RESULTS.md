@@ -179,7 +179,30 @@ could additionally restrict execution to verified files.
 
 ## 5. Testing
 
-TODO
+All tests are NixOS VM tests that boot **real disk images** (GPT, ESP +
+btrfs or ext4 root, OVMF UEFI, systemd-boot, systemd initrd), built by
+`nixos/lib/disk-image.nix`. Sealing happens inside the build VM exactly as on
+a real install. Run: `nix build .#checks.x86_64-linux.<name>`.
+
+| Test | What it shows |
+|---|---|
+| `boot` | Boots; `/nix/store` is the overlay with `verity=require` from the image named on the kernel command line; `nix-store --verify --check-contents` passes; nothing of the system is in the writable layer |
+| `tamper` (btrfs), `tamper-ext4` | Six attacks, each refused (section 4): object swapped with/without fs-verity, raw block-device write under an object, replacement planted in the writable layer while "offline", runtime modification by root (reported, reverted at boot), tampered image (boot refused, hard fail) |
+| `lifecycle` | `switch` to gen 2 (gen 2 runs from the writable layer, image sealed, both entries stamped), reboot (gen 2 now verified, not in writable layer), boot-menu rollback to gen 1 (`bootctl set-oneshot`), boot gen 2, `nixos-rebuild switch --rollback`, reboot into the rolled-back default |
+| `nix-ops` | Sandboxed `nix-build` inside the VM; `nix-store --add`, `nix store add-file`; sealing picks those paths up and they are verified after reboot; GC: delete old generation + `nix-collect-garbage` removes the paths, re-seal drops them from the image, after reboot the post-boot GC deletes their objects (object store shrinks) |
+| `robustness` | A store path corrupted before sealing makes the seal fail with a NAR-hash error and `switch-to-configuration` fail, while the boot entries keep the previous image and the machine boots; power cut (VM killed) right after `switch-to-configuration boot` still boots the new generation |
+| `convert` | Start from an ordinary-store NixOS, enable the module, `switch-to-configuration boot`: repository created, store sealed, pre-conversion entry removed, reboot into composefs, old plain store cleaned up; later generations keep booting |
+
+Real hardware: Surface Pro 4 via `HARDWARE-TEST.md` (`nixcfs-hwtest` stages
+1–3: boot, measurements, non-destructive tamper check, rebuild, reboot,
+boot-menu rollback). Results: section 6.
+
+Bugs the tests found and that were fixed along the way: a composefs-rs panic
+with a shared semaphore (patch 1); GC deleting the booted image, because
+composefs-rs's flock protection of mounted images does not survive the initrd;
+boot entries left unbootable if a seal failed (they are now stamped with the
+previous image first); entries of pre-conversion generations that could not
+boot; a test-driver bug (nixpkgs patch 1).
 
 ## 6. Measurements
 
@@ -187,12 +210,58 @@ TODO
 
 ## 7. Patches for upstream
 
-TODO
+Each is a separate `git format-patch` file with its rationale in the commit
+message. None has been submitted.
 
-## 8. What next
+| Patch | Project | What |
+|---|---|---|
+| `patches/composefs-rs/0001-fs-don-t-panic-…` | composefs-rs | `read_filesystem_with_opts` with a caller-supplied semaphore panics (`mpsc::channel(0)`) when the semaphore has no free permits at call time; use at least 1. Applied in this build. |
+| `patches/nixpkgs/0001-nixos-test-driver-…` | nixpkgs | `wait_for_console_text` reads one console line per 1 s retry and falls permanently behind fast output; drain the queue on each try. Not applied (worked around in `tests/tamper.py`). |
 
-TODO
+Observations worth reporting upstream (no patch yet):
+
+* composefs-rs keeps mounted images alive in GC via a flock held by the
+  kernel's reference to the image file. That does not hold for an image
+  mounted from the initrd (and the code falls back to a `/proc/self/fd` path on
+  kernels that reject an fd as erofs `source`, which also loses the lock).
+  `nixcfs` keeps an explicit GC root for the booted image instead.
+* The whole of `nixcfs` could become a NixOS module in nixpkgs, perhaps with
+  the seal step in Rust inside composefs-rs (`cfsctl` has no incremental,
+  zero-copy, "rebuild image from previous image + new directories" mode).
+
+## 8. What next (not done)
+
+1. **Secure Boot with signed UKIs** carrying `nixcfs.image=` (e.g. extend
+   lanzaboote to take the digest from `nixcfs update-boot` and re-sign the
+   UKIs on each seal). This is the one change that turns "the store matches
+   the boot entry" into "the store matches what *you* sealed", against offline
+   attackers.
+2. **Live re-seal**: after `switch`, mount the new image *beneath* the running
+   store (`move_mount(MOVE_MOUNT_BENEATH)`) with a fresh upper, then lazily
+   detach the old one, so new generations are verified without a reboot. Needs
+   nix-daemon quiescing and care with service mount namespaces.
+3. **IPE policy** (kernel ≥ 6.12) to allow execution only from verified files,
+   so that even the writable layer cannot supply executables. This needs
+   research on how IPE's fs-verity properties see overlayfs files.
+4. **Seal in the background as paths are built** (Nix `post-build-hook`), so
+   that `nixos-rebuild` only has to write the image.
+5. **GRUB/Limine** entry stamping, for machines that cannot use systemd-boot.
+6. **Upstreaming**: the module to nixpkgs; an incremental/zero-copy "image
+   from previous image + new directories" API to composefs-rs; the two patches.
+7. **linux-surface kernel** for the daily driver if it is a Surface: orthogonal,
+   but worth checking that its kernel config keeps fs-verity/EROFS/overlayfs.
 
 ## 9. Pinned revisions
 
-TODO
+| What | Revision |
+|---|---|
+| nixpkgs (systems, tests, build tools) | nixos-26.05 `f68407657ad294471eb4b2e65d193df26edf729f` (2026-11-16), via `flake.lock` |
+| composefs-rs | `424c820c5e5237fef9e73a7446415108ab3eb7f9` (main, 2026-11-12, version 0.10.0) + patch 1, via `flake.lock` |
+| Nix on the target systems | 2.34.9 (nixpkgs `nixVersions.stable`) |
+| Linux on the target systems | 6.18.63 (nixpkgs default) |
+| systemd | 260.5 |
+| Rust toolchain | 1.95.0 (nixpkgs) |
+| Nix on the build host | 2.35.6, official installer (sha256 recorded in HOST-SETUP.md) |
+| Build host | Ubuntu 26.04.1, kernel 7.0.0-43-generic, Surface Pro 8 (i7-1185G7) |
+
+Rust crate dependencies of `nixcfs` are pinned by `nixcfs/Cargo.lock`.
