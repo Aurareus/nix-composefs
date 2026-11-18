@@ -26,7 +26,10 @@
       # same pointer, computed without the pointer to avoid a cycle.)
       hwGen2 = mkSystem [ ./nixos/configs/hw-plasma.nix ./tests/gen2-hw.nix ];
       hwtestGen2Pointer = {
-        environment.etc."nixcfs-hwtest/gen2".text = "${hwGen2.config.system.build.toplevel}";
+        # Only the path name: gen 2 must not be in gen 1's closure (it is shipped
+        # separately, so that the hardware test exercises sealing new paths).
+        environment.etc."nixcfs-hwtest/gen2".text =
+          builtins.unsafeDiscardStringContext "${hwGen2.config.system.build.toplevel}";
       };
       mkImage = args: import ./nixos/lib/disk-image.nix ({ inherit pkgs; } // args);
     in {
@@ -56,6 +59,9 @@
         # Benchmark systems: the Plasma desktop, in a VM, composefs vs ordinary store.
         bench-plasma = mkSystem [ ./nixos/configs/hw-plasma.nix ./nixos/configs/vm-test.nix { networking.hostName = "bench-cfs"; } ];
         bench-plasma-plain = mkSystem [ ./nixos/configs/hw-plasma.nix ./nixos/configs/vm-test.nix { nixcfs.enable = false; networking.hostName = "bench-plain"; } ];
+        bench-plasma-gen2 = mkSystem [ ./nixos/configs/hw-plasma.nix ./nixos/configs/vm-test.nix ./bench/gen2-big.nix { networking.hostName = "bench-cfs"; } ];
+        bench-plasma-plain-gen2 = mkSystem [ ./nixos/configs/hw-plasma.nix ./nixos/configs/vm-test.nix ./bench/gen2-big.nix { nixcfs.enable = false; networking.hostName = "bench-plain"; } ];
+        bench-plasma-sha512-gen2 = mkSystem [ ./nixos/configs/hw-plasma.nix ./nixos/configs/vm-test.nix ./bench/gen2-big.nix { networking.hostName = "bench-cfs512"; nixcfs.algorithm = "fsverity-sha512-12"; } ];
         bench-plasma-sha512 = mkSystem [ ./nixos/configs/hw-plasma.nix ./nixos/configs/vm-test.nix { networking.hostName = "bench-cfs512"; nixcfs.algorithm = "fsverity-sha512-12"; } ];
         # Generation 1 with an ordinary store: starting point of the conversion test.
         vm-gen1-plain = mkSystem [ ./nixos/configs/vm-test.nix ./tests/gen1.nix { nixcfs.enable = false; } ];

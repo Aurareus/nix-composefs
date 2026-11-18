@@ -57,14 +57,16 @@ fn trash_dir(layout: &Layout) -> Result<PathBuf> {
     Ok(t)
 }
 
-/// Remove every trusted.overlay.* xattr from a directory.
+/// Remove trusted.overlay.* xattrs that change lookup semantics (opaque,
+/// redirect, metacopy, origin, ...) from a directory.  `trusted.overlay.uuid`
+/// is overlayfs's own bookkeeping for file handles and is kept.
 fn strip_overlay_xattrs(p: &Path) -> Result<Vec<String>> {
     let mut buf = vec![0u8; 65536];
     let n = rustix::fs::llistxattr(p, &mut buf)?;
     let mut removed = vec![];
     for name in buf[..n].split(|&b| b == 0).filter(|s| !s.is_empty()) {
         let s = String::from_utf8_lossy(name).into_owned();
-        if s.starts_with("trusted.overlay.") {
+        if s.starts_with("trusted.overlay.") && s != "trusted.overlay.uuid" {
             rustix::fs::lremovexattr(p, name)?;
             removed.push(s);
         }

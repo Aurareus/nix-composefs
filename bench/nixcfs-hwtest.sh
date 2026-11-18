@@ -7,6 +7,7 @@
 #   sudo nixcfs-hwtest 3   # checks the rollback, writes the final report
 # Everything is logged to /boot/nixcfs-reports/ (the stick's FAT partition).
 set -uo pipefail
+set +o errexit   # (writeShellApplication turns it on; failures are recorded, not fatal)
 if [ "$(id -u)" != 0 ]; then exec sudo "$0" "$@"; fi
 R=/boot/nixcfs-reports
 mkdir -p "$R"
@@ -29,9 +30,9 @@ case "${1:-}" in
   nixcfs status
   say "measurements (takes a few minutes; keep the machine idle)"
   nixcfs-bench "$R/bench-$(date -u +%Y%m%dT%H%M%SZ)"
-  say "rebuild to generation 2 (from the local cache on the stick)"
+  say "rebuild to generation 2 (from the bundle on the stick)"
   t0=$(date +%s.%N)
-  nix-store -r "$GEN2" --option substituters file:///var/lib/nixcfs-hwtest/cache --option require-sigs false > /dev/null || bad "fetching gen 2"
+  nix-store --import < /var/lib/nixcfs-hwtest/gen2.nixexport > /dev/null || bad "importing gen 2"
   t1=$(date +%s.%N)
   nix-env -p /nix/var/nix/profiles/system --set "$GEN2" && "$GEN2/bin/switch-to-configuration" switch || bad "switch to gen 2"
   t2=$(date +%s.%N)

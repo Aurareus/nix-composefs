@@ -5,6 +5,8 @@
 
 ## Blocked on user
 (none so far: questions Q1–Q6 asked 2026-11-18T02:00Z were non-blocking; answered ~02:25Z)
+- 2026-11-18T05:09:05Z — START waiting on user: real-hardware test round 1 (HARDWARE-TEST.md). Not
+  blocking: VM benchmarks and the write-up continue in parallel.
 
 ## Estimates
 - 2026-11-18T01:57:23Z — initial estimates, recorded before writing code (after surveying composefs-rs

@@ -15,7 +15,8 @@
 }:
 let
   toplevel = config.system.build.toplevel;
-  closure = pkgs.closureInfo { rootPaths = [ toplevel ]; };
+  closure = pkgs.closureInfo { rootPaths = [ toplevel ] ++ cacheSystems; };
+  systemClosure = pkgs.closureInfo { rootPaths = [ toplevel ]; };
   nixcfs = config.nixcfs.package;
   mkfs =
     {
@@ -31,7 +32,7 @@ pkgs.vmTools.runInLinuxVM (
       QEMU_OPTS = "-smp 4";
       preVM = ''
         mkdir -p $out
-        size=$(( $(cat ${closure}/total-nar-size) / 1048576 * 13 / 10 + ${toString (espSizeMiB + extraSpaceMiB)} ))
+        size=$(( $(cat ${systemClosure}/total-nar-size) / 1048576 * 13 / 10 + $(cat ${closure}/total-nar-size) / 1048576 - $(cat ${systemClosure}/total-nar-size) / 1048576 + ${toString (espSizeMiB + extraSpaceMiB)} ))
         diskImage=$out/disk.raw
         ${pkgs.qemu-utils}/bin/qemu-img create -f raw $diskImage ''${size}M
       '';
@@ -75,12 +76,15 @@ pkgs.vmTools.runInLinuxVM (
       NIXOS_INSTALL_BOOTLOADER=1 nixos-enter --root /mnt -- \
         /nix/var/nix/profiles/system/bin/switch-to-configuration boot
       ${lib.optionalString (cacheSystems != [ ]) ''
-        mkdir -p /mnt/var/lib/nixcfs-hwtest/cache
+        mkdir -p /mnt/var/lib/nixcfs-hwtest
         nix-store -qR ${toplevel} | sort > $TMPDIR/have
         nix-store -qR ${lib.concatStringsSep " " cacheSystems} | sort > $TMPDIR/want
         comm -13 $TMPDIR/have $TMPDIR/want > $TMPDIR/new
         echo "shipping $(wc -l < $TMPDIR/new) extra paths in the local cache"
-        nix copy --extra-experimental-features nix-command --no-check-sigs --to file:///mnt/var/lib/nixcfs-hwtest/cache $(cat $TMPDIR/new)
+        test -s $TMPDIR/new
+        # A NAR export bundle (imported with nix-store --import); its references
+        # outside the bundle are already valid in the image's store.
+        nix-store --export $(cat $TMPDIR/new) > /mnt/var/lib/nixcfs-hwtest/gen2.nixexport
       ''}
       cat /mnt/boot/loader/entries/*.conf | tee $out/entries.txt
       ${lib.optionalString config.nixcfs.enable ''

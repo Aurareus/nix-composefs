@@ -3,6 +3,7 @@
 # write a report directory.  Run as root, a few minutes after boot, with nothing
 # else running.  Usage: nixcfs-bench [OUTDIR]   (default: /boot/nixcfs-reports/...)
 set -uo pipefail
+set +o errexit   # (writeShellApplication turns it on; failures are recorded, not fatal)
 if [ "$(id -u)" != 0 ]; then exec sudo "$0" "$@"; fi
 
 variant=plain
@@ -19,7 +20,8 @@ dropc() { sync; echo 3 > /proc/sys/vm/drop_caches; }
 t() {
   local name=$1; shift
   local s e
-  s=$(date +%s.%N); "$@" > /dev/null 2>&1; local rc=$?; e=$(date +%s.%N)
+  local rc=0
+  s=$(date +%s.%N); "$@" > /dev/null 2>&1 || rc=$?; e=$(date +%s.%N)
   printf '%s %.3f rc=%d\n' "$name" "$(echo "$e - $s" | bc)" "$rc" | tee -a "$out/timings.txt"
 }
 
@@ -64,10 +66,9 @@ for i in 1 2 3; do dropc; t "read_closure_cold_$i" readall; done
 for i in 1 2 3; do t "read_closure_warm_$i" readall; done
 for i in 1 2 3; do dropc; t "walk_closure_cold_$i" statall; done
 for i in 1 2 3; do t "walk_closure_warm_$i" statall; done
-apps=(
-  "python3:${sys}/sw/bin/python3 -c import\ json,ssl,sqlite3,asyncio"
-  "perl:${sys}/sw/bin/perl -MPOSIX -e1"
-)
+apps=()
+[ -x "$sys/sw/bin/python3" ] && apps+=("python3:${sys}/sw/bin/python3 -c import\ json,ssl,sqlite3,asyncio")
+[ -x "$sys/sw/bin/perl" ] && apps+=("perl:${sys}/sw/bin/perl -MPOSIX -e1")
 [ -x "$sys/sw/bin/konsole" ] && apps+=("konsole:env QT_QPA_PLATFORM=offscreen $sys/sw/bin/konsole --version")
 [ -x "$sys/sw/bin/kate" ] && apps+=("kate:env QT_QPA_PLATFORM=offscreen $sys/sw/bin/kate --version")
 [ -x "$sys/sw/bin/firefox" ] && apps+=("firefox:$sys/sw/bin/firefox --headless --screenshot /tmp/ff.png about:blank")
