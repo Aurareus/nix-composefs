@@ -7,8 +7,15 @@ Status: DRAFT (real-hardware results pending)
 NixOS boots with `/nix/store` served through composefs (composefs-rs 0.10,
 EROFS + overlayfs + fs-verity, `verity=require`). Rebuilds, reboots, boot-menu
 and runtime rollbacks, Nix builds, adding paths and garbage collection all work,
-on btrfs and on ext4. Automated VM tests cover each of these, plus seven kinds
-of tampering, all of which are refused.
+on btrfs and on ext4. Automated VM tests cover each of these, plus six kinds of
+tampering with sealed content (all refused, tamper-proof boot included) and a
+corrupted not-yet-sealed path (refused by sealing).
+
+Cost, measured against the same desktop with an ordinary store: about +0.8 s
+boot (+18%); cold application starts 0–30% slower and warm ones unchanged; bulk
+cold reads of the store +43% (nearly 2x on a CPU without SHA instructions);
++6.7% disk on btrfs; and each rebuild spends about 15 s per 2.5 GB of new
+content sealing it.
 
 The goal is sound and the core of it is met. Two things are worth knowing up front:
 
@@ -89,7 +96,7 @@ The goal is sound and the core of it is met. Two things are worth knowing up fro
 | **IMA/EVM appraisal or IPE** | Per-file signatures/policy rather than a content-addressed snapshot; needs keys and signing on every build; does not give "this file equals what the image says". IPE could later *complement* this (e.g. only execute from verified files). |
 | **fs-verity on store files without composefs** | Makes files immutable, but nothing holds the expected digest, so a replaced file (with its own verity) is accepted. composefs's image is that expected-digest table, enforced by overlayfs. |
 | **Two stacked overlays** (plain composefs mount as lower of a second writable overlay) | Works, but doubles overlay lookups on every path. A single overlay with upper + lower + data-only layer works on 6.18 and was chosen. |
-| **sha512 digests** | Measured: slower than sha256 both on SHA-NI CPUs and on Skylake (section 6). |
+| **sha512 digests** (default stays sha256) | Measured: clearly slower than sha256 on a SHA-NI CPU (cold reads +27%), about equal on Skylake (−6% cold reads, same sealing time), and the image is 23% larger (section 6.4). Selectable per installation with `nixcfs.algorithm`. |
 | **`cfsctl create-image`** as the sealing tool | It copies all data and re-reads everything each time; the store needs incremental, zero-copy sealing with NAR checks. `nixcfs` uses composefs-rs as a library instead. |
 
 ## 3. Limitations
@@ -117,6 +124,8 @@ The goal is sound and the core of it is met. Two things are worth knowing up fro
 * **Memory/time of sealing** scales with the store's metadata (the whole image
   is rebuilt each time from the previous one plus new paths; data of existing
   paths is not touched). See measurements.
+* **Overhead on btrfs**: fs-verity Merkle trees live in btrfs metadata, which
+  is duplicated by default: +6.7% disk for the desktop (section 6.3).
 * **Single filesystem**: the object store, writable layer and image must be on
   the same fs-verity-capable filesystem (btrfs or ext4 `-O verity`). XFS has no
   fs-verity.

@@ -1,4 +1,4 @@
-# Design notes (working document; RESULTS.md is the final write-up)
+# Design notes (early working document, 2026-11-18 ~02:00Z; superseded by RESULTS.md section 2)
 
 ## Layout on disk (root fs must support fs-verity: ext4 -O verity, or btrfs)
 

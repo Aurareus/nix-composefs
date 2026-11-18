@@ -2,6 +2,7 @@
 
 ## Working stretches
 - 2026-11-18T01:47:48Z — start of stretch 1 (read brief, survey host; first command run at this time)
+- 2026-11-18T05:48:36Z — end of stretch 1 (only real-hardware results outstanding; waiting on user)
 
 ## Blocked on user
 (none so far: questions Q1–Q6 asked 2026-11-18T02:00Z were non-blocking; answered ~02:25Z)
@@ -31,3 +32,6 @@
   `nixos-rebuild switch --rollback` (test bug: offline re-exec).
 - 2026-11-18T03:43:42Z — full lifecycle test green (rebuild, reboot, boot-menu rollback,
   runtime `nixos-rebuild switch --rollback`, reboot into the rolled-back default).
+- 2026-11-18T05:48:36Z — full test suite green on the final code (boot, tamper, tamper-ext4, lifecycle,
+  nix-ops incl. nix-gc re-seal hook, robustness, convert); VM desktop benchmarks done.
+  Everything except real hardware is complete; RESULTS.md awaits hardware numbers.

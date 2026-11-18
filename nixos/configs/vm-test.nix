@@ -10,4 +10,7 @@
   # test-instrumentation turns off documentation etc.; keep the image small.
   documentation.enable = false;
   boot.loader.timeout = lib.mkForce 1;
+  # The nix-ops test runs nix-gc.service by hand (and checks the re-seal hook).
+  nix.gc.automatic = true;
+  nix.gc.dates = "monthly";
 }

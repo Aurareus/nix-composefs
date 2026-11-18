@@ -48,12 +48,14 @@ with subtest("garbage collection removes dead paths and frees their objects"):
     used_before = int(machine.succeed("du -sb /nix/.cfs/objects | cut -f1"))
     machine.succeed("nix-env -p /nix/var/nix/profiles/system --delete-generations old")
     machine.succeed("rm -f /root/keep-blob")
-    print(machine.succeed("nix-collect-garbage 2>&1 | tail -3"))
+    # The NixOS GC service; nixcfs hooks it to re-seal and update boot entries.
+    machine.succeed("systemctl start nix-gc.service")
+    print(machine.succeed("journalctl -u nix-gc.service | tail -5"))
+    machine.succeed("journalctl -u nix-gc.service | grep -q 'nixcfs: sealed'")
     machine.succeed(f"! test -e {cowsay_path}")
     machine.succeed(f"! test -e {added}")
     machine.succeed(f"! test -e {built}")
-    # Re-seal (what nixos-rebuild boot or the nix-gc service does).
-    rep = json.loads(machine.succeed("/run/current-system/bin/switch-to-configuration boot >/dev/null && nixcfs status"))
+    rep = json.loads(machine.succeed("nixcfs status"))
     d3 = rep["latest_image"]
     assert d3 != d2
     # The booted image still holds the objects while mounted...
