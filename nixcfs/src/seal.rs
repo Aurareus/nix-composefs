@@ -291,7 +291,7 @@ pub async fn seal<ID: FsVerityHashValue>(opts: SealOptions) -> Result<SealReport
     let base_names: HashSet<OsString> = fs.root.entries().map(|(n, _)| n.to_owned()).collect();
 
     let booted_names: HashSet<OsString> = match read_booted(layout, &opts.booted) {
-        Some(b) => image_top_names(&repo, &parse_digest::<ID>(&b)?)?.0,
+        Some(b) => image_top_names_userspace(&repo, &parse_digest::<ID>(&b)?)?,
         None => HashSet::new(),
     };
     let mut booted_fs: Option<FileSystem<ID>> = None;

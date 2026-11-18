@@ -72,6 +72,24 @@ pub fn image_top_names<ID: FsVerityHashValue>(
     Ok((names, root_stat))
 }
 
+/// Top-level names of an image, parsed in userspace (no erofs module needed).
+pub fn image_top_names_userspace<ID: FsVerityHashValue>(repo: &Repository<ID>, digest: &ID) -> Result<HashSet<OsString>> {
+    let fs = load_image(repo, digest)?;
+    Ok(fs
+        .root
+        .entries()
+        .filter(|(n, i)| !(n.len() == 2 && matches!(i, composefs::tree::Inode::Leaf(..)) && is_stub(&fs, i)))
+        .map(|(n, _)| n.to_owned())
+        .collect())
+}
+
+fn is_stub<ID: FsVerityHashValue>(fs: &FileSystem<ID>, i: &composefs::tree::Inode<ID>) -> bool {
+    match i {
+        composefs::tree::Inode::Leaf(id, _) => matches!(fs.leaf(*id).content, composefs::generic_tree::LeafContent::CharacterDevice(0)),
+        _ => false,
+    }
+}
+
 pub fn parse_digest<ID: FsVerityHashValue>(s: &str) -> Result<ID> {
     let s = s.strip_prefix("sha256:").or_else(|| s.strip_prefix("sha512:")).unwrap_or(s);
     ID::from_hex(s).map_err(|e| anyhow::anyhow!("bad digest {s}: {e:?}"))

@@ -20,3 +20,6 @@
   (NAR hashes all match the Nix DB; `nix-store --verify --check-contents` passes through
   the mount). ~32 min after start vs. the 3 h estimate: composefs-rs already had
   everything needed (upper-layer mounts, reflink/hardlink import) bar one panic fix.
+- 2026-11-18T02:40:13Z — first boot of NixOS from the composefs store (VM: QEMU/KVM,
+  OVMF UEFI, systemd-boot, btrfs root; store image verified against the digest on
+  the kernel command line, verity=require). Real hardware: pending.

@@ -88,6 +88,12 @@ enum Cmd {
     },
     /// Show the state of the store.
     Status,
+    /// Print the object file backing a store file in an image (default: booted).
+    ObjectOf {
+        path: PathBuf,
+        #[arg(long)]
+        image: Option<String>,
+    },
 }
 
 fn default_jobs() -> usize {
@@ -183,13 +189,58 @@ fn run<ID: FsVerityHashValue>(cli: Cli) -> Result<()> {
             eprintln!("nixcfs: gc removed {} objects ({} bytes)", g.objects_removed, g.bytes_freed);
             print(&serde_json::json!({"seal": rep, "entries": e, "gc": g}))
         }
+        Cmd::ObjectOf { path, image } => {
+            let image = match image {
+                Some(i) => i,
+                None => std::fs::read_to_string(Path::new(RUN_DIR).join("image"))?.trim().to_owned(),
+            };
+            let repo = repo::open_secure::<ID>(&layout.repo())?;
+            let fs = repo::load_image(&repo, &repo::parse_digest::<ID>(&image)?)?;
+            let rel = path.strip_prefix("/nix/store").context("not a store path")?;
+            let mut dir = &fs.root;
+            let comps: Vec<_> = rel.components().collect();
+            for (i, c) in comps.iter().enumerate() {
+                let name = c.as_os_str();
+                match dir.lookup(name).with_context(|| format!("{} not in image", path.display()))? {
+                    composefs::tree::Inode::Directory(d) => dir = d,
+                    composefs::tree::Inode::Leaf(id, _) if i + 1 == comps.len() => {
+                        match &fs.leaf(*id).content {
+                            composefs::generic_tree::LeafContent::Regular(composefs::tree::RegularFile::External(oid, _)) => {
+                                println!("{}", layout.repo().join("objects").join(oid.to_object_pathname()).display());
+                                return Ok(());
+                            }
+                            _ => bail!("{} is stored inline in the image (no object)", path.display()),
+                        }
+                    }
+                    _ => bail!("{} is not a regular file", path.display()),
+                }
+            }
+            bail!("{} is a directory", path.display())
+        }
         Cmd::Status => {
             let latest = repo::read_ref::<ID>(&layout.repo(), LATEST_REF)?.map(|d| d.to_hex());
             let booted = std::fs::read_to_string(Path::new(RUN_DIR).join("image")).ok().map(|s| s.trim().to_owned());
             let unsealed = std::fs::read_dir(layout.upper())
                 .map(|rd| rd.filter_map(|e| e.ok()).filter(|e| std::fs::symlink_metadata(e.path()).map(|m| !seal::is_whiteout(&m)).unwrap_or(false)).count())
                 .unwrap_or(0);
+            // Upper-layer entries shadowing a path of the booted image: runtime
+            // modifications of sealed paths (they are reverted at next boot).
+            let mut shadowing = vec![];
+            if let Some(b) = &booted {
+                let repo = repo::open_secure::<ID>(&layout.repo())?;
+                let names = repo::image_top_names_userspace(&repo, &repo::parse_digest::<ID>(b)?)?;
+                if let Ok(rd) = std::fs::read_dir(layout.upper()) {
+                    for e in rd.filter_map(|e| e.ok()) {
+                        if names.contains(&e.file_name())
+                            && !std::fs::symlink_metadata(e.path()).map(|m| seal::is_whiteout(&m)).unwrap_or(true)
+                        {
+                            shadowing.push(e.file_name().to_string_lossy().into_owned());
+                        }
+                    }
+                }
+            }
             print(&serde_json::json!({
+                "shadowing_sealed_paths": shadowing,
                 "store_is_overlay": seal::store_is_overlay(&layout.store()),
                 "booted_image": booted,
                 "latest_image": latest,

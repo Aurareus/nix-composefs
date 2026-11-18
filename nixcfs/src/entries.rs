@@ -58,8 +58,7 @@ pub fn entry_digests(esp: &Path) -> Result<BTreeSet<String>> {
 
 pub fn update_entries<ID: FsVerityHashValue>(layout: &Layout, esp: &Path, image: &ID) -> Result<EntriesReport> {
     let repo = open_secure::<ID>(&layout.repo())?;
-    let (names, _) = image_top_names(&repo, image)?;
-    let names: HashSet<OsString> = names;
+    let names: HashSet<OsString> = image_top_names_userspace(&repo, image)?;
     let mut rep = EntriesReport::default();
     for p in entry_files(esp)? {
         let text = std::fs::read_to_string(&p)?;
