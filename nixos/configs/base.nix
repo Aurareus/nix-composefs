@@ -2,7 +2,7 @@
 # images and the real-hardware USB image).
 { lib, pkgs, ... }:
 {
-  nixcfs.enable = true;
+  nixcfs.enable = lib.mkDefault true;
 
   boot.initrd.systemd.enable = true;
   boot.loader.systemd-boot.enable = true;
@@ -24,7 +24,7 @@
   # Sandboxed builds from inside the system are part of the tests.
   nix.settings.sandbox = true;
 
-  environment.systemPackages = with pkgs; [ fsverity-utils jq btrfs-progs ];
+  environment.systemPackages = with pkgs; [ fsverity-utils jq btrfs-progs e2fsprogs ];
 
   system.stateVersion = "26.05";
 }

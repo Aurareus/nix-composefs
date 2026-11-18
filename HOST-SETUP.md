@@ -21,3 +21,6 @@ Everything done to the host, in order, so it can be reproduced.
    (nixbld users were also added to group kvm; harmless, not sufficient).
 4. Scratch filesystems for experiments: loop-mounted ext4 (`-O verity`) and btrfs
    images under ~/scratch (not needed for the tests, which run in VMs).
+5. Ubuntu 26.04 mounts /tmp as a 16 GB tmpfs, and Nix builds there by default:
+   VM disk overlays then live in RAM and QEMU `cache=none` (O_DIRECT) fails.
+   Added `build-dir = /nix/var/nix/builds` to /etc/nix/nix.conf (on the NVMe).

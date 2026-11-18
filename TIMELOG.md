@@ -23,3 +23,9 @@
 - 2026-11-18T02:40:13Z — first boot of NixOS from the composefs store (VM: QEMU/KVM,
   OVMF UEFI, systemd-boot, btrfs root; store image verified against the digest on
   the kernel command line, verity=require). Real hardware: pending.
+- ~2026-11-18T03:00Z (VM; approximate, from the test log of the run in which it first
+  happened) — first rebuild (gen 1 → gen 2, switch), boot into gen 2 (verified), and
+  rollback to gen 1 through the boot menu. That run failed later only at
+  `nixos-rebuild switch --rollback` (test bug: offline re-exec).
+- 2026-11-18T03:43:42Z — full lifecycle test green (rebuild, reboot, boot-menu rollback,
+  runtime `nixos-rebuild switch --rollback`, reboot into the rolled-back default).

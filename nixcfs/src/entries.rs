@@ -19,6 +19,7 @@ use crate::{layout::*, repo::*};
 pub struct EntriesReport {
     pub updated: Vec<String>,
     pub removed_unsealed: Vec<String>,
+    pub removed_without_nixcfs: Vec<String>,
 }
 
 fn entry_files(esp: &Path) -> Result<Vec<std::path::PathBuf>> {
@@ -56,7 +57,9 @@ pub fn entry_digests(esp: &Path) -> Result<BTreeSet<String>> {
     Ok(s)
 }
 
-pub fn update_entries<ID: FsVerityHashValue>(layout: &Layout, esp: &Path, image: &ID) -> Result<EntriesReport> {
+/// Stamp `image` on every NixOS entry.  With `prune`, also remove entries that
+/// cannot boot with it (system not in the image, or built without nixcfs).
+pub fn update_entries<ID: FsVerityHashValue>(layout: &Layout, esp: &Path, image: &ID, prune: bool) -> Result<EntriesReport> {
     let repo = open_secure::<ID>(&layout.repo())?;
     let names: HashSet<OsString> = image_top_names_userspace(&repo, image)?;
     let mut rep = EntriesReport::default();
@@ -64,10 +67,21 @@ pub fn update_entries<ID: FsVerityHashValue>(layout: &Layout, esp: &Path, image:
         let text = std::fs::read_to_string(&p)?;
         let fname = p.file_name().unwrap().to_string_lossy().into_owned();
         if let Some(sys) = entry_system(&text) {
-            if !names.contains(&OsString::from(&sys)) {
+            if prune && !names.contains(&OsString::from(&sys)) {
                 warn!("{fname}: system {sys} is not in the store image; removing entry");
                 std::fs::remove_file(&p)?;
                 rep.removed_unsealed.push(fname);
+                continue;
+            }
+            // A system built without the nixcfs module cannot mount the
+            // store (its initrd knows nothing about it): such an entry would
+            // not boot once the plain store is gone.
+            let marker = layout.root.join("nix/store").join(&sys).join("nixcfs");
+            let sysdir = layout.root.join("nix/store").join(&sys);
+            if prune && sysdir.exists() && !marker.exists() {
+                warn!("{fname}: system {sys} predates nixcfs (no composefs support in its initrd); removing entry");
+                std::fs::remove_file(&p)?;
+                rep.removed_without_nixcfs.push(fname);
                 continue;
             }
         }
@@ -108,8 +122,13 @@ pub struct GcReport {
     pub images_removed: u64,
 }
 
-/// Keep: the latest image and every image a boot entry names.  Images that
-/// are currently mounted are kept by composefs-rs itself (they hold a lock).
+/// Keep: the latest image, every image a boot entry names, and the image the
+/// running system booted from (its objects back the running store; they may
+/// only go once nothing has it mounted, i.e. after the next boot).
+///
+/// composefs-rs also tries to keep mounted images alive via a flock on the
+/// image file, but that lock does not survive the initrd (or kernels that
+/// reject an fd as the erofs source), so we do not rely on it.
 pub fn gc<ID: FsVerityHashValue>(layout: &Layout, esp: Option<&Path>) -> Result<GcReport> {
     let repo_path = layout.repo();
     let repo = open_secure::<ID>(&repo_path)?;
@@ -119,6 +138,11 @@ pub fn gc<ID: FsVerityHashValue>(layout: &Layout, esp: Option<&Path>) -> Result<
     }
     if let Some(esp) = esp {
         keep.extend(entry_digests(esp)?);
+    }
+    if layout.root == Path::new("/") {
+        if let Ok(b) = std::fs::read_to_string(Path::new(RUN_DIR).join("image")) {
+            keep.insert(b.trim().to_owned());
+        }
     }
     let mut dropped = vec![];
     for (name, hex) in list_refs(&repo_path, "nixos/boot")? {

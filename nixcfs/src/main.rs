@@ -81,6 +81,10 @@ enum Cmd {
     UpdateBoot {
         #[arg(long, default_value = "/boot")]
         esp: PathBuf,
+        /// Create the repository with this algorithm if it does not exist yet
+        /// (converting a system with an ordinary store).
+        #[arg(long, default_value = "fsverity-sha256-12")]
+        init_algorithm: Algorithm,
         #[arg(long)]
         no_nar_check: bool,
         #[arg(long, default_value_t = default_jobs())]
@@ -167,27 +171,50 @@ fn run<ID: FsVerityHashValue>(cli: Cli) -> Result<()> {
                 Some(i) => repo::parse_digest(&i)?,
                 None => repo::read_ref(&layout.repo(), LATEST_REF)?.context("nothing sealed yet")?,
             };
-            print(&entries::update_entries(&layout, &esp, &image)?)
+            print(&entries::update_entries(&layout, &esp, &image, true)?)
         }
         Cmd::Gc { esp } => print(&entries::gc::<ID>(&layout, esp.as_deref())?),
-        Cmd::UpdateBoot { esp, no_nar_check, jobs } => {
-            let rep = rt()?.block_on(seal::seal::<ID>(seal::SealOptions {
+        Cmd::UpdateBoot { esp, no_nar_check, jobs, .. } => {
+            // systemd-boot's builder has just rewritten every entry without a
+            // digest.  Stamp them with the previous image straight away, so
+            // that a failed or interrupted seal still leaves bootable entries
+            // (those whose system is in the previous image).
+            let previous: Option<ID> = repo::read_ref(&layout.repo(), LATEST_REF)?;
+            // (No pruning yet: the new generation's entry is not in the
+            // previous image but will be in the one we are about to seal.)
+            if let Some(p) = &previous {
+                entries::update_entries(&layout, &esp, p, false)?;
+            }
+            let sealed = rt()?.block_on(seal::seal::<ID>(seal::SealOptions {
                 layout: layout.clone(),
                 sources: vec![],
                 booted: None,
                 nar_check: !no_nar_check,
                 jobs,
                 only: None,
-            }))?;
+            }));
+            let rep = match sealed {
+                Ok(r) => r,
+                Err(e) => {
+                    if let Some(p) = &previous {
+                        entries::update_entries(&layout, &esp, p, true)?;
+                    }
+                    eprintln!("nixcfs: SEALING FAILED: {e:#}");
+                    eprintln!("nixcfs: boot entries keep the previous image; entries for unsealed systems were removed");
+                    return Err(e);
+                }
+            };
             eprintln!(
                 "nixcfs: sealed {} store paths ({} new, {} reused) into image {} in {:.1}s",
                 rep.valid_paths, rep.scanned_paths, rep.reused_paths, rep.image, rep.seconds
             );
             let image: ID = repo::parse_digest(&rep.image)?;
-            let e = entries::update_entries(&layout, &esp, &image)?;
+            let e = entries::update_entries(&layout, &esp, &image, true)?;
             let g = entries::gc::<ID>(&layout, Some(&esp))?;
             eprintln!("nixcfs: gc removed {} objects ({} bytes)", g.objects_removed, g.bytes_freed);
-            print(&serde_json::json!({"seal": rep, "entries": e, "gc": g}))
+            let report = serde_json::json!({"seal": rep, "entries": e, "gc": g});
+            std::fs::write(layout.rw().join("last-update-boot.json"), serde_json::to_vec_pretty(&report)?).ok();
+            print(&report)
         }
         Cmd::ObjectOf { path, image } => {
             let image = match image {
@@ -250,21 +277,33 @@ fn run<ID: FsVerityHashValue>(cli: Cli) -> Result<()> {
     }
 }
 
+fn init_repo(layout: &Layout, algorithm: &Algorithm) -> Result<()> {
+    let path = layout.repo();
+    std::fs::create_dir_all(path.parent().unwrap())?;
+    let cfg = RepositoryConfig::new(*algorithm);
+    match algorithm {
+        Algorithm::Sha256 { .. } => drop(Repository::<Sha256HashValue>::init_path(CWD, &path, cfg)?),
+        Algorithm::Sha512 { .. } => drop(Repository::<Sha512HashValue>::init_path(CWD, &path, cfg)?),
+    }
+    std::fs::create_dir_all(layout.rw())?;
+    Ok(())
+}
+
 fn main() -> Result<()> {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
     let cli = Cli::parse();
     if let Cmd::Init { algorithm } = &cli.cmd {
         let layout = Layout::new(&cli.root);
-        let path = layout.repo();
-        std::fs::create_dir_all(path.parent().unwrap())?;
-        let cfg = RepositoryConfig::new(*algorithm);
-        match algorithm {
-            Algorithm::Sha256 { .. } => drop(Repository::<Sha256HashValue>::init_path(CWD, &path, cfg)?),
-            Algorithm::Sha512 { .. } => drop(Repository::<Sha512HashValue>::init_path(CWD, &path, cfg)?),
-        }
-        std::fs::create_dir_all(layout.rw())?;
-        println!("initialized {} ({algorithm})", path.display());
+        init_repo(&layout, algorithm)?;
+        println!("initialized {} ({algorithm})", layout.repo().display());
         return Ok(());
+    }
+    if let Cmd::UpdateBoot { init_algorithm, .. } = &cli.cmd {
+        let layout = Layout::new(&cli.root);
+        if !layout.repo().join("meta.json").exists() {
+            eprintln!("nixcfs: creating repository {} ({init_algorithm})", layout.repo().display());
+            init_repo(&layout, init_algorithm)?;
+        }
     }
     match algorithm(&Layout::new(&cli.root))? {
         Algorithm::Sha256 { .. } => run::<Sha256HashValue>(cli),

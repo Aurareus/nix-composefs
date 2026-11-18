@@ -1,0 +1,43 @@
+From 4cf4fb22f300f8c4e9a9d1079c97362fc12bba21 Mon Sep 17 00:00:00 2001
+From: Aurareus <aurareus@users.noreply.github.com>
+Date: Wed, 18 Nov 2026 03:48:39 +0000
+Subject: [PATCH] nixos/test-driver: wait_for_console_text: drain the console
+ queue on each try
+
+console_matches() took a single line from the queue per attempt and
+retry() sleeps one second between attempts, so a guest printing more than
+one line per second (a booting kernel, a panic/reboot loop) is never caught
+up with and the wait times out even though the text was printed long ago.
+Read all queued lines on every attempt.
+---
+ .../src/test_driver/machine/__init__.py            | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/nixos/lib/test-driver/src/test_driver/machine/__init__.py b/nixos/lib/test-driver/src/test_driver/machine/__init__.py
+index 97b299825..0ac9f9d52 100644
+--- a/nixos/lib/test-driver/src/test_driver/machine/__init__.py
++++ b/nixos/lib/test-driver/src/test_driver/machine/__init__.py
+@@ -1165,12 +1165,14 @@ class QemuMachine(BaseMachine):
+ 
+         def console_matches(_last_try: bool) -> bool:
+             nonlocal console
+-            try:
+-                # This will return as soon as possible and
+-                # sleep 1 second.
+-                console.write(self.last_lines.get(block=False))
+-            except queue.Empty:
+-                pass
++            # Drain everything received so far: retry() sleeps a second
++            # between attempts, so taking one line per attempt falls behind
++            # (forever) whenever the guest prints more than a line a second.
++            while True:
++                try:
++                    console.write(self.last_lines.get(block=False))
++                except queue.Empty:
++                    break
+             console.seek(0)
+             matches = re.search(regex, console.read())
+             return matches is not None
+-- 
+2.53.0
+

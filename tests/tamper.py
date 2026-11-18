@@ -47,10 +47,19 @@ with subtest("raw block device modification of an object"):
         logical = machine.succeed(f"filefrag -v {bigobj} | awk '$1==\"0:\"{{print $4}}' | tr -d .").strip()
         out = machine.succeed(f"btrfs-map-logical -l {int(logical)*4096} /dev/vda2")
         print(out)
-        off = int(re.search(r"physical (\d+)", out).group(1)) + 8192
+        m = re.search(r"physical (\d+)", out)
+        assert m, out
+        off = int(m.group(1)) + 8192
+    machine.succeed(f"dd if=/dev/vda2 of=/root/saved-bytes bs=1 skip={off} count=8 status=none")
     machine.succeed(f"printf 'TAMPERED' | dd of=/dev/vda2 bs=1 seek={off} conv=notrunc,fsync status=none")
     must_refuse(big, "raw block write")
     print(machine.succeed("dmesg | grep -iE 'verity|csum' | tail -3"))
+    if FSTYPE == "ext4":
+        machine.succeed("dmesg | grep -q 'FILE CORRUPTED'")   # caught by fs-verity itself
+    # Repair the block so the rest of the test (and perl) keeps working.
+    machine.succeed(f"dd if=/root/saved-bytes of=/dev/vda2 bs=1 seek={off} conv=notrunc,fsync status=none")
+    drop_caches()
+    machine.succeed(f"cat {big} > /dev/null")
 
 with subtest("writable layer cannot shadow sealed paths (offline tamper)"):
     # Simulate an attacker editing the disk while the system is down: plant a
@@ -89,7 +98,14 @@ with subtest("tampered image: boot refuses (hard fail)"):
     machine.succeed(f"rm -f {real} && cp /root/img {real} && fsverity enable {real} && sync")
     machine.shutdown()
     machine.start()
-    machine.wait_for_console_text("nixcfs-store.service: Failed|Failed to start.*composefs Nix store|Verifying fs-verity digest", timeout=300)
-    machine.wait_for_console_text("emergency|Kernel panic", timeout=120)
+    # (Polling the full console log: the driver's wait_for_console_text falls
+    # behind fast output; see patches/nixpkgs/0001.)
+    def console_has(rx):
+        return lambda _: re.search(rx, machine.get_console_log()) is not None
+    retry(console_has(r"Expected digest [0-9a-f]+ but found [0-9a-f]+"), 300)
+    retry(console_has(r"Failed to start Mount the composefs Nix store"), 60)
+    retry(console_has(r"emergency|Kernel panic"), 60)
+    # The system never got as far as mounting the store or switching root.
+    assert "Reached target Switch Root" not in machine.get_console_log().split("Expected digest")[-1]
     print("boot refused as expected")
     machine.crash()

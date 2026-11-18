@@ -6,7 +6,7 @@
     (modulesPath + "/profiles/qemu-guest.nix")
     (modulesPath + "/testing/test-instrumentation.nix")
   ];
-  networking.hostName = "cfsvm";
+  networking.hostName = lib.mkDefault "cfsvm";
   # test-instrumentation turns off documentation etc.; keep the image small.
   documentation.enable = false;
   boot.loader.timeout = lib.mkForce 1;

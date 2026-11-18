@@ -1,3 +1,5 @@
+# (--no-reexec: the VM is offline, and nixos-rebuild would otherwise try to
+# fetch a newer copy of itself.)
 # Rebuild to a new generation, boot it, roll back (bootloader and runtime).
 machine.start()
 machine.wait_for_unit("multi-user.target")
@@ -53,7 +55,7 @@ with subtest("boot generation 2 again, then nixos-rebuild switch --rollback"):
     machine.start()
     machine.wait_for_unit("multi-user.target")
     assert gen() == "2"
-    print(machine.succeed("nixos-rebuild switch --rollback 2>&1"))
+    print(machine.succeed("nixos-rebuild switch --rollback --no-reexec 2>&1"))
     assert gen() == "1"
     machine.succeed("cowsay runtime rollback")
     # Default boot entry follows the profile: next boot is generation 1.

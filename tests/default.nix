@@ -5,12 +5,17 @@ let
   lib = pkgs.lib;
   gen1 = self.nixosConfigurations.vm-gen1.config;
   gen2 = self.nixosConfigurations.vm-gen2.config;
+  gen1-ext4 = self.nixosConfigurations.vm-gen1-ext4.config;
+  gen1-plain = self.nixosConfigurations.vm-gen1-plain.config;
   qemu = "${pkgs.qemu_test}/bin/qemu-system-x86_64";
 
-  mkTest = { name, fsType ? "btrfs", script, extra ? { } }:
+  mkTest = { name, fsType ? "btrfs", script, extra ? { }, imageConfig ? null }:
     let
-      image = mkImage { config = gen1; inherit fsType; };
-      gen2Cache = pkgs.mkBinaryCache { rootPaths = [ gen2.system.build.toplevel ]; };
+      image = mkImage {
+        config = if imageConfig != null then imageConfig else if fsType == "ext4" then gen1-ext4 else gen1;
+        inherit fsType;
+      };
+      gen2Cache = pkgs.mkBinaryCache { rootPaths = [ gen2.system.build.toplevel gen1.system.build.toplevel ]; };
     in
     pkgs.testers.runNixOSTest ({
       inherit name;
@@ -79,6 +84,15 @@ in
   lifecycle = mkTest {
     name = "nixcfs-lifecycle";
     script = builtins.readFile ./lifecycle.py;
+  };
+  robustness = mkTest {
+    name = "nixcfs-robustness";
+    script = builtins.readFile ./robustness.py;
+  };
+  convert = mkTest {
+    name = "nixcfs-convert";
+    imageConfig = gen1-plain;
+    script = builtins.readFile ./convert.py;
   };
   nix-ops = mkTest {
     name = "nixcfs-nix-ops";

@@ -69,6 +69,6 @@ with subtest("garbage collection removes dead paths and frees their objects"):
     used_after = int(machine.succeed("du -sb /nix/.cfs/objects | cut -f1"))
     print(f"objects: {used_before} -> {used_after} bytes")
     assert used_after < used_before - 1000000
-    assert machine.succeed(f"ls /nix/.cfs/images | wc -l").strip() in ("1", "2")
+    assert machine.succeed("ls /nix/.cfs/images | wc -l").strip() in ("1", "2")
     machine.succeed("nix-store --verify --check-contents")
 machine.shutdown()

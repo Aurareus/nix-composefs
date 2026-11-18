@@ -17,6 +17,14 @@ in
       type = lib.types.package;
       description = "The nixcfs package.";
     };
+    algorithm = lib.mkOption {
+      type = lib.types.enum [ "fsverity-sha256-12" "fsverity-sha512-12" ];
+      default = "fsverity-sha256-12";
+      description = ''
+        fs-verity digest algorithm, used when the object store is created (the
+        first bootloader install with nixcfs enabled).  Fixed afterwards.
+      '';
+    };
     narCheck = lib.mkOption {
       type = lib.types.bool;
       default = true;
@@ -57,6 +65,12 @@ in
 
     environment.systemPackages = [ cfg.package ];
 
+    # Marks systems whose initrd can mount the composefs store; boot entries
+    # for systems without it (pre-conversion generations) are removed.
+    system.systemBuilderCommands = ''
+      echo ${cfg.package} > $out/nixcfs
+    '';
+
     boot.initrd.kernelModules = [ "erofs" "overlay" ];
     boot.initrd.systemd.storePaths = [ nixcfs ];
 
@@ -87,7 +101,7 @@ in
     # the install fails (nixos-rebuild reports an error) and entries that
     # would boot an unsealed system are removed by the next successful run.
     boot.loader.systemd-boot.extraInstallCommands = ''
-      ${nixcfs} update-boot --esp ${esp} ${lib.optionalString (!cfg.narCheck) "--no-nar-check"} >/dev/null
+      ${nixcfs} update-boot --esp ${esp} --init-algorithm ${cfg.algorithm} ${lib.optionalString (!cfg.narCheck) "--no-nar-check"} >/dev/null
     '';
 
     # Nix must not hard-link into .links (see assertion) and must leave the

@@ -1,0 +1,2 @@
+sha256: enable 5.614803589 s; verified cold read 818 MiB/s; unverified cold read 2718 MiB/s
+sha512: enable 10.473418692 s; verified cold read 291 MiB/s; unverified cold read 2362 MiB/s
