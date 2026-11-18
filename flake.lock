@@ -1,0 +1,45 @@
+{
+  "nodes": {
+    "composefs-rs": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1794524630,
+        "narHash": "sha256-0yv2Il+3bev70gKbGkaMTfLfRdG5tyJzbnRbini7hYw=",
+        "owner": "containers",
+        "repo": "composefs-rs",
+        "rev": "424c820c5e5237fef9e73a7446415108ab3eb7f9",
+        "type": "github"
+      },
+      "original": {
+        "owner": "containers",
+        "repo": "composefs-rs",
+        "rev": "424c820c5e5237fef9e73a7446415108ab3eb7f9",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1794872590,
+        "narHash": "sha256-E+XLAfnC7+bdr4qlEgRv6cdGmiqTU5oeFNKCha7epqQ=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "f68407657ad294471eb4b2e65d193df26edf729f",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "f68407657ad294471eb4b2e65d193df26edf729f",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "composefs-rs": "composefs-rs",
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

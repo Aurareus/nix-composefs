@@ -1,0 +1,40 @@
+From 93427da7db666e665bafcac8d60e9b76faf7c049 Mon Sep 17 00:00:00 2001
+From: Aurareus <aurareus@users.noreply.github.com>
+Date: Wed, 18 Nov 2026 02:18:42 +0000
+Subject: [PATCH] fs: don't panic when a shared semaphore has no free permits
+
+read_filesystem_impl() sized its work channel with
+semaphore.available_permits().  When the caller passes a semaphore shared
+with other concurrent scans (ReadFilesystemOpts::semaphore), that can be 0
+at the moment of the call, and tokio::sync::mpsc::channel(0) panics.
+Use at least 1.
+
+Found by running several read_filesystem_with_opts() calls concurrently
+with one shared semaphore to bound total verity work.
+---
+ crates/composefs/src/fs.rs | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/crates/composefs/src/fs.rs b/crates/composefs/src/fs.rs
+index 3bf0ac5..b0dddaa 100644
+--- a/crates/composefs/src/fs.rs
++++ b/crates/composefs/src/fs.rs
+@@ -839,8 +839,13 @@ async fn read_filesystem_impl<ObjectID: FsVerityHashValue>(
+     // discovered; the async side spawns verity tasks immediately.
+     // The channel bound limits how far the scan can race ahead of
+     // verity processing, providing natural backpressure.
+-    let (tx, rx) =
+-        tokio::sync::mpsc::channel::<(FileDevIno, OwnedFd, u64)>(semaphore.available_permits());
++    //
++    // The semaphore may be shared with other concurrent operations (see
++    // `ReadFilesystemOpts::semaphore`), so it can have no permits available
++    // right now; tokio panics on a zero-sized channel, so use at least 1.
++    let (tx, rx) = tokio::sync::mpsc::channel::<(FileDevIno, OwnedFd, u64)>(
++        semaphore.available_permits().max(1),
++    );
+ 
+     /// Result from a task in the join set — either the scan completed
+     /// or a verity computation finished.
+-- 
+2.53.0
+

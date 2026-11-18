@@ -1,6 +1,7 @@
 result
 result-*
-/target
+target/
 *.qcow2
 *.img
 /scratch
+/third_party/composefs-rs

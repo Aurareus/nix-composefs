@@ -1,0 +1,23 @@
+[package]
+name = "nixcfs"
+version = "0.1.0"
+edition = "2024"
+description = "Serve the Nix store through composefs (EROFS + overlayfs + fs-verity)"
+license = "MIT OR Apache-2.0"
+
+[dependencies]
+composefs = { path = "../third_party/composefs-rs/crates/composefs" }
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+rustix = { version = "1", features = ["fs", "mount", "process", "thread"] }
+rusqlite = { version = "0.37", features = ["bundled"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "sync"] }
+openssl = "0.10"
+hex = "0.4"
+log = "0.4"
+env_logger = "0.11"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+lto = "thin"

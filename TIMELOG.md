@@ -4,6 +4,7 @@
 - 2026-11-18T01:47:48Z — start of stretch 1 (read brief, survey host; first command run at this time)
 
 ## Blocked on user
+(none so far: questions Q1–Q6 asked 2026-11-18T02:00Z were non-blocking; answered ~02:25Z)
 
 ## Estimates
 - 2026-11-18T01:57:23Z — initial estimates, recorded before writing code (after surveying composefs-rs
@@ -14,3 +15,8 @@
     including real-hardware round trips and overnight answer latency.
 
 ## Milestones
+- 2026-11-18T02:19:57Z — (a) first NixOS system closure (26.05 minimal toplevel, 505 paths,
+  1.15 GB) mounted through composefs with verity=require, on btrfs, sealed by nixcfs
+  (NAR hashes all match the Nix DB; `nix-store --verify --check-contents` passes through
+  the mount). ~32 min after start vs. the 3 h estimate: composefs-rs already had
+  everything needed (upper-layer mounts, reflink/hardlink import) bar one panic fix.

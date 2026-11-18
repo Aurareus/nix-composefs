@@ -42,3 +42,14 @@ Please send: CPU/GPU (any NVIDIA?), whether it boots UEFI, whether Secure Boot i
 enabled (my image's bootloader is unsigned, so it would need to be disabled for
 testing, or you'd use a machine where it is off), size of a USB stick you can
 overwrite (>= 32 GB preferred), and whether it has wired Ethernet or needs Wi-Fi.
+
+## Answers (received 2026-11-18T02:2xZ)
+- Q1: **A** (seal at rebuild, verified from next boot).
+- Q2: **Hard fail**.
+- Q3: **btrfs** → primary test target is btrfs (reflink import into the object store);
+  ext4 kept as a secondary, tested path.
+- Q4: tracks **stable** (nixos-26.05).
+- Q5: **Plasma**.
+- Q6: Surface Pro 4 (Skylake: no SHA-NI → benchmark sha256 vs sha512 verity), UEFI,
+  Secure Boot disabled, 128 GB USB stick, Wi-Fi only (Marvell mwifiex: needs firmware,
+  NetworkManager in the image).
