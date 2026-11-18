@@ -17,6 +17,11 @@
   - (b) "done" as defined in the brief: ~35 h of working time; ~4 calendar days
     including real-hardware round trips and overnight answer latency.
 
+- 2026-11-18T05:48:36Z — revised (b): ~4.5 h of working time plus the real-hardware
+  round trip(s), instead of ~35 h. Reason: everything but the hardware run is done
+  after 4 h; composefs-rs needed one small fix rather than new features, and the
+  NixOS side reduced to an initrd service plus a systemd-boot hook.
+
 ## Milestones
 - 2026-11-18T02:19:57Z — (a) first NixOS system closure (26.05 minimal toplevel, 505 paths,
   1.15 GB) mounted through composefs with verity=require, on btrfs, sealed by nixcfs
