@@ -1,0 +1,6 @@
+result
+result-*
+/target
+*.qcow2
+*.img
+/scratch

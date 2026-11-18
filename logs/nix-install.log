@@ -1,0 +1,602 @@
+downloading Nix 2.35.6 binary tarball for x86_64-linux from 'https://releases.nixos.org/nix/nix-2.35.6/nix-2.35.6-x86_64-linux.tar.xz' to '/tmp/nix-binary-tarball-unpack.kJbFWmSuve'...
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+  0      0   0      0   0      0      0      0                              0 10 26.10M  10  2.62M   0      0  2.37M      0   00:10   00:01   00:09  2.37M 36 26.10M  36  9.59M   0      0  4.48M      0   00:05   00:02   00:03  4.48M 81 26.10M  81 21.30M   0      0  6.78M      0   00:03   00:03          6.78M 84 26.10M  84 22.04M   0      0  5.32M      0   00:04   00:04          5.32M 85 26.10M  85 22.29M   0      0  4.33M      0   00:06   00:05   00:01  4.33M 87 26.10M  87 22.77M   0      0  3.70M      0   00:07   00:06   00:01  3.99M 89 26.10M  89 23.26M   0      0  3.25M      0   00:08   00:07   00:01  2.72M 92 26.10M  92 24.05M   0      0  2.95M      0   00:08   00:08         562.1k 99 26.10M  99 25.96M   0      0  2.70M      0   00:09   00:09         735.8k100 26.10M 100 26.10M   0      0  2.66M      0   00:09   00:09         735.8k100 26.10M 100 26.10M   0      0  2.66M      0   00:09   00:09         735.8k100 26.10M 100 26.10M   0      0  2.66M      0   00:09   00:09         735.8k
+Note: a multi-user installation is possible. See https://nix.dev/manual/nix/stable/installation/installing-binary.html#multi-user-installation
+[1;31mSwitching to the Multi-user Installer[0m
+[32mWelcome to the Multi-User Nix Installation
+[0m
+This installation tool will set up your computer with the Nix package
+manager. This will happen in a few stages:
+
+1. Make sure your computer doesn't already have Nix. If it does, I
+   will show you instructions on how to clean up your old install.
+
+2. Show you what I am going to install and where. Then I will ask
+   if you are ready to continue.
+
+3. Create the system users [34m(uids [30001..30032])[0m and groups [34m(gid 30000)[0m
+   that the Nix daemon uses to run builds. To create system users
+   in a different range, exit and run this tool again with
+   NIX_FIRST_BUILD_UID set.
+
+4. Perform the basic installation of the Nix files daemon.
+
+5. Configure your shell to import special Nix Profile files, so you
+   can use Nix.
+
+6. Start the Nix daemon.
+
+[32m[4;32mWould you like to see a more detailed list of what I will do?
+[0mNo TTY, assuming you would say yes :)
+
+I will:
+
+ - make sure your computer doesn't already have Nix files
+   (if it does, I will tell you how to clean them up.)
+ - create local users (see the list above for the users I'll make)
+ - create a local group (nixbld)
+ - install Nix in /nix
+ - create a configuration file in /etc/nix
+ - set up the "default profile" by creating some Nix-related files in
+   /root
+ - back up /etc/bash.bashrc to /etc/bash.bashrc.backup-before-nix
+ - update /etc/bash.bashrc to include some Nix configuration
+ - load and start a service (at /etc/systemd/system/nix-daemon.service
+   and /etc/systemd/system/nix-daemon.socket) for nix-daemon
+
+[32m[4;32mReady to continue?
+[0mNo TTY, assuming you would say yes :)
+
+[34m---- let's talk about sudo -----------------------------------------------------
+[0mThis script is going to call sudo a lot. Normally, it would show you
+exactly what commands it is running and why. However, the script is
+run in a headless fashion, like this:
+
+  $ curl -L https://nixos.org/nix/install | sh
+
+or maybe in a CI pipeline. Because of that, I'm going to skip the
+verbose output in the interest of brevity.
+
+If you would like to
+see the output, try like this:
+
+  $ curl -L -o install-nix https://nixos.org/nix/install
+  $ sh ./install-nix
+
+
+[32m~~> Checking for artifacts of previous installs
+[0mBefore I try to install, I'll check for signs Nix already is or has
+been installed on this system.
+
+[34m---- Nix config report ---------------------------------------------------------
+[0m[1m        Temp Dir[0m:	/tmp/tmp.NNoAWfGbj2
+[1m        Nix Root[0m:	/nix
+[1m     Build Users[0m:	32
+[1m  Build Group ID[0m:	30000
+[1mBuild Group Name[0m:	nixbld
+
+[4;34mbuild users:
+[0m[1m    Username[0m:	UID
+[1m     nixbld1[0m:	30001
+[1m     nixbld2[0m:	30002
+[1m     nixbld3[0m:	30003
+[1m     nixbld4[0m:	30004
+[1m     nixbld5[0m:	30005
+[1m     nixbld6[0m:	30006
+[1m     nixbld7[0m:	30007
+[1m     nixbld8[0m:	30008
+[1m     nixbld9[0m:	30009
+[1m     nixbld10[0m:	30010
+[1m     nixbld11[0m:	30011
+[1m     nixbld12[0m:	30012
+[1m     nixbld13[0m:	30013
+[1m     nixbld14[0m:	30014
+[1m     nixbld15[0m:	30015
+[1m     nixbld16[0m:	30016
+[1m     nixbld17[0m:	30017
+[1m     nixbld18[0m:	30018
+[1m     nixbld19[0m:	30019
+[1m     nixbld20[0m:	30020
+[1m     nixbld21[0m:	30021
+[1m     nixbld22[0m:	30022
+[1m     nixbld23[0m:	30023
+[1m     nixbld24[0m:	30024
+[1m     nixbld25[0m:	30025
+[1m     nixbld26[0m:	30026
+[1m     nixbld27[0m:	30027
+[1m     nixbld28[0m:	30028
+[1m     nixbld29[0m:	30029
+[1m     nixbld30[0m:	30030
+[1m     nixbld31[0m:	30031
+[1m     nixbld32[0m:	30032
+
+[32m[4;32mReady to continue?
+[0mNo TTY, assuming you would say yes :)
+
+[32m~~> Setting up the build group nixbld
+[0m[1m            Created[0m:	Yes
+
+[32m~~> Setting up the build user nixbld1
+[0museradd warning: nixbld1's uid 30001 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 1
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld2
+[0museradd warning: nixbld2's uid 30002 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 2
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld3
+[0museradd warning: nixbld3's uid 30003 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 3
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld4
+[0museradd warning: nixbld4's uid 30004 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 4
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld5
+[0museradd warning: nixbld5's uid 30005 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 5
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld6
+[0museradd warning: nixbld6's uid 30006 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 6
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld7
+[0museradd warning: nixbld7's uid 30007 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 7
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld8
+[0museradd warning: nixbld8's uid 30008 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 8
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld9
+[0museradd warning: nixbld9's uid 30009 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 9
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld10
+[0museradd warning: nixbld10's uid 30010 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 10
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld11
+[0museradd warning: nixbld11's uid 30011 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 11
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld12
+[0museradd warning: nixbld12's uid 30012 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 12
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld13
+[0museradd warning: nixbld13's uid 30013 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 13
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld14
+[0museradd warning: nixbld14's uid 30014 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 14
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld15
+[0museradd warning: nixbld15's uid 30015 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 15
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld16
+[0museradd warning: nixbld16's uid 30016 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 16
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld17
+[0museradd warning: nixbld17's uid 30017 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 17
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld18
+[0museradd warning: nixbld18's uid 30018 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 18
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld19
+[0museradd warning: nixbld19's uid 30019 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 19
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld20
+[0museradd warning: nixbld20's uid 30020 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 20
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld21
+[0museradd warning: nixbld21's uid 30021 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 21
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld22
+[0museradd warning: nixbld22's uid 30022 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 22
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld23
+[0museradd warning: nixbld23's uid 30023 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 23
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld24
+[0museradd warning: nixbld24's uid 30024 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 24
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld25
+[0museradd warning: nixbld25's uid 30025 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 25
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld26
+[0museradd warning: nixbld26's uid 30026 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 26
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld27
+[0museradd warning: nixbld27's uid 30027 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 27
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld28
+[0museradd warning: nixbld28's uid 30028 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 28
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld29
+[0museradd warning: nixbld29's uid 30029 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 29
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld30
+[0museradd warning: nixbld30's uid 30030 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 30
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld31
+[0museradd warning: nixbld31's uid 30031 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 31
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the build user nixbld32
+[0museradd warning: nixbld32's uid 30032 is greater than SYS_UID_MAX 999
+[1m           Created[0m:	Yes
+[1m            Hidden[0m:	Yes
+[1m    Home Directory[0m:	/var/empty
+[1m              Note[0m:	Nix build user 32
+[1m   Logins Disabled[0m:	Yes
+[1m  Member of nixbld[0m:	Yes
+[1m    PrimaryGroupID[0m:	30000
+
+[32m~~> Setting up the basic directory structure
+[0mcreating directory '/nix'
+creating directory '/nix/var'
+creating directory '/nix/var/log'
+creating directory '/nix/var/log/nix'
+creating directory '/nix/var/log/nix/drvs'
+creating directory '/nix/var/nix'
+creating directory '/nix/var/nix/db'
+creating directory '/nix/var/nix/gcroots'
+creating directory '/nix/var/nix/profiles'
+creating directory '/nix/var/nix/temproots'
+creating directory '/nix/var/nix/userpool'
+creating directory '/nix/var/nix/daemon-socket'
+creating directory '/nix/var/nix/gcroots/per-user'
+creating directory '/nix/var/nix/profiles/per-user'
+creating directory '/nix/store'
+creating directory '/etc/nix'
+
+[32m~~> Installing Nix
+[0m      Alright! We have our first nix at /nix/store/g3m57m0jcdj84fas49lpiwpisacp20gr-nix-2.35.6
+      Just finished getting the nix database ready.
+
+[32m~~> Setting up shell profiles: /etc/bashrc /etc/profile.d/nix.sh /etc/zshrc /etc/bash.bashrc /etc/zsh/zshrc
+[0m
+# Nix
+if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
+  . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
+fi
+# End Nix
+
+
+# Nix
+if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
+  . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
+fi
+# End Nix
+
+
+# Nix
+if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
+  . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
+fi
+# End Nix
+
+
+# Nix
+if [ -e '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh' ]; then
+  . '/nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh'
+fi
+# End Nix
+
+# System-wide .bashrc file for interactive bash(1) shells.
+
+# To enable the settings / commands in this file for login shells as well,
+# this file has to be sourced in /etc/profile.
+
+# If not running interactively, don't do anything
+[ -z "${PS1-}" ] && return
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+# set variable identifying the chroot you work in (used in the prompt below)
+if [ -z "${debian_chroot:-}" ] && [ -r /etc/debian_chroot ]; then
+    debian_chroot=$(< /etc/debian_chroot)
+fi
+
+# set a fancy prompt (non-color, overwrite the one in /etc/profile)
+# but only if not SUDOing and have SUDO_PS1 set; then assume smart user.
+if ! [ -n "${SUDO_USER-}" -a -n "${SUDO_PS1-}" ]; then
+  PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
+fi
+
+case "$TERM" in
+xterm*|vte*|gnome*)
+    for _hook in /etc/profile.d/vte*.sh; do : ; done
+    if [ -r $_hook ]; then
+        . $_hook
+    fi
+    unset _hook
+    ;;
+xterm*|rxvt*)
+    # Commented out, don't overwrite xterm -T "title" -n "icontitle" by default.
+    # If this is an xterm set the title to user@host:dir
+    #PROMPT_COMMAND='echo -ne "\033]0;${USER}@${HOSTNAME}: ${PWD}\007"'
+    ;;
+*)
+    ;;
+esac
+
+# enable bash completion in interactive shells
+#if ! shopt -oq posix; then
+#  if [ -f /usr/share/bash-completion/bash_completion ]; then
+#    . /usr/share/bash-completion/bash_completion
+#  elif [ -f /etc/bash_completion ]; then
+#    . /etc/bash_completion
+#  fi
+#fi
+
+# if the command-not-found package is installed, use it
+if [ -x /usr/lib/command-not-found ] || [ -x /usr/share/command-not-found/command-not-found ]; then
+	function command_not_found_handle {
+	        # check because c-n-f could've been removed in the meantime
+                if [ -x /usr/lib/command-not-found ]; then
+		   /usr/lib/command-not-found -- "$1"
+                   return $?
+                elif [ -x /usr/share/command-not-found/command-not-found ]; then
+		   /usr/share/command-not-found/command-not-found -- "$1"
+                   return $?
+		else
+		   printf "%s: command not found\n" "$1" >&2
+		   return 127
+		fi
+	}
+fi
+
+# Source profile.d even though "it's meant to be for login shells
+# only". This is commented out by default, for not cluttering the
+# shell with things a user might not expect.  Please see above
+# for the explict hooks for bash-completion and command-not-found.
+
+#if [ -d /etc/profile.d ]; then
+#  for _i in /etc/profile.d/*.sh; do
+#    if [ -r $_i ]; then
+#      . $_i
+#    fi
+#  done
+#  unset _i
+#fi
+
+[32m~~> Setting up shell profiles for Fish with conf.d/nix.fish inside /etc/fish /usr/local/etc/fish /opt/homebrew/etc/fish /opt/local/etc/fish
+[0m
+[32m~~> Setting up the default profile
+[0minstalling 'nix-2.35.6'
+building '/nix/store/a73b3qd46djaq4lca6lk8dwnnps3r4d0-user-environment.drv'...
+installing 'nix-manual-2.35.6-man'
+building '/nix/store/30vgl50jqza89pncg5dw06d9zj8p57xj-user-environment.drv'...
+installing 'nss-cacert-3.131.1'
+building '/nix/store/gw4nn65r44j7smrlhcqqlb769x6wp9m2-user-environment.drv'...
+unpacking 1 channels...
+
+[32m~~> Setting up the nix-daemon systemd service
+[0mCreated symlink '/etc/systemd/system/nix-daemon.service' → '/nix/var/nix/profiles/default/lib/systemd/system/nix-daemon.service'.
+Created symlink '/etc/systemd/system/nix-daemon.socket' → '/nix/var/nix/profiles/default/lib/systemd/system/nix-daemon.socket'.
+Created symlink '/etc/systemd/system/sockets.target.wants/nix-daemon.socket' → '/nix/var/nix/profiles/default/lib/systemd/system/nix-daemon.socket'.
+[32mAlright! We're done!
+[0mTry it! Open a new terminal, and type:
+
+  $ nix-shell -p nix-info --run "nix-info -m"
+
+Thank you for using this installer. If you have any feedback or need
+help, don't hesitate:
+
+You can open an issue at
+https://github.com/NixOS/nix/issues/new?labels=installer&template=installer.md
+
+Or get in touch with the community: https://nixos.org/community
+
+[34m---- Reminders -----------------------------------------------------------------
+[0m[34m[ 1 ][0m
+Nix won't work in active shell sessions until you restart them.
+
